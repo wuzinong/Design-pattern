@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>SimpleFactory</title>
+</head>
+<body>
+	<script type="text/javascript">
+		//As to my understanding
+		function createPeople(name){
+			this.name = name;
+		}
+		createPeople.prototype.getName=function(){
+			return "my name is:"+this.name;
+		}
+		function peopleFactory(people){
+		  var result=[];
+		  for(var i=0,j=people.length;i<j;i++){
+		  	 result.push(new createPeople(people[i]))
+		  }
+		  return result;
+		}
+		var  p = peopleFactory(["tom","Jame","Peter"]);
+		for(var a=0,b=p.length;a<b;a++){
+			console.log(p[a].getName());
+		}
+
+		//quoted from the book
+		//so the author means the "new" action standing for the factory
+		function A(name){
+			this.name = name;
+		}
+		function ObjectFactory(){
+			var obj = {},
+		    //get first argument and set as 'constructor'
+			    Constructor = Array.prototype.shift.call(arguments);
+			//inherit the passed constructor,surely with a judgement,if number is passed 
+			//point the constructor to object,else ,point to the parameter which is passed in
+			obj.__proto__ = typeof Constructor.prototype === 'number' ? Object.prototype : Constructor.prototype;
+			var ret = Constructor.apply(obj,arguments);
+			return typeof ret === 'object' ? ret : obj;
+		}
+		var a = ObjectFactory(A,'svenzeng');
+		console.log(a.name);
+	</script>
+</body>
+</html>
