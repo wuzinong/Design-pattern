@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Singleton</title>
+</head>
+<body>
+	<script type="text/javascript">
+	    //Firstly thinking on my own
+         var mySingleton = function(){
+         	 var result = null;
+         	 
+         	 function createS(){
+         	 	 if(result ===null){
+	         	 	result = document.body.appendChild(document.createElement('p'));
+	         	 }
+	         	 return result;
+         	 }
+         	 return {
+         	 	getS:createS
+         	 };
+         }
+         var st = new mySingleton();
+         var a = st.getS();
+ 	     var b = st.getS();
+ 	     console.log(a===b);
+
+		//better one quoted from the book
+		var singleton = function(fn){
+			var result;
+			return function(){
+				return result || (result = fn.apply(this,arguments));
+			}
+		}
+		var createMask = singleton(function(){
+			return document.body.appendChild(document.createElement('div'));
+		});
+		var c = createMask();
+		var d = createMask();
+		console.log(c===d);
+	</script>
+</body>
+</html>
