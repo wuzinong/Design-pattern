@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Observer</title>
+</head>
+<body>
+	<script type="text/javascript">
+    
+    //1) 抽象目标角色（Subject）：目标角色知道它的观察者，可以有任意多个观察者观察同一个目标。并且提供注册和删除观察者对象的接口。目标角色往往由抽象类或者接口来实现。
+    //2) 抽象观察者角色（Observer）：为那些在目标发生改变时需要获得通知的对象定义一个更新接口。抽象观察者角色主要由抽象类或者接口来实现。
+    //3) 具体目标角色（Concrete Subject）：将有关状态存入各个Concrete Observer对象。当它的状态发生改变时, 向它的各个观察者发出通知。
+    //4) 具体观察者角色（Concrete Observer）：存储有关状态，这些状态应与目标的状态保持一致。实现Observer的更新接口以使自身状态与目标的状态保持一致。在本角色内也可以维护一个指向Concrete Subject对象的引用。
+
+    //My understanding
+    
+    //Cooker
+    function cooker(name){
+       this.name = name;
+       this.MealList = [];
+    }
+    cooker.prototype.cookMeal = function(mealName){
+         var MealList = ["apple pie","chicken",""]
+         var obj = {mealName:mealName,status:"untaken"}
+         this.MealList.push(obj);
+         console.log("My name is "+this.name+" I have finished the meal ");
+    }
+    cooker.prototype.getTriggered = function(forWhat){
+         console.info("hi "+this.name+" "+forWhat+" has been triggered you should do sth");
+
+         if(this[forWhat]){
+            this[forWhat]();
+         }else{
+            console.error("Sorry I've no solution");
+         }
+    }
+
+    //Observer
+    function observer(){
+        var trigger,subscribe,unsubscribe,taskList,getMySubList,getAllList,triggerCache;
+        taskList = [];
+        triggerCache =[];//todo  setinverval,clear triggerCache
+        subscribe = function(who,forWhat){
+             if(!checkExist(who,forWhat,false)){
+                taskList.push({subscriber:who,event:forWhat});
+                console.log(who.name+"订阅了 "+forWhat+" 事件");
+             }else{
+                console.log(who.name+"已经订阅了 "+forWhat+" 事件");
+             }
+        }
+
+
+        unsubscribe = function(who,forWhat){
+            if(checkExist(who,forWhat,true)){
+                console.log(who.name+"取消订阅了 "+forWhat+" 事件");
+            }else{
+                console.log(who.name+"没有订阅过 "+forWhat+" 事件");
+            }
+        }
+
+        trigger = function(forWhat){
+            // var temp = [];
+            var count = 0;
+            for(var i=0,j=taskList.length;i<j;i++){
+                if(taskList[i].event==forWhat){
+                   // temp.push(taskList[i]);
+                   count++;
+                   taskList[i].subscriber.getTriggered(forWhat);
+                }
+            }
+            if(count==0){
+                console.log("No such kind of subscription by now")
+            }
+        }
+
+        getMySubList = function(who){
+            var count = 0;
+            for(var i=0,j=taskList.length;i<j;i++){
+               if(taskList[i].subscriber == who){
+                  count++;
+                  console.log(who.name+"订阅过"+taskList[i].event+" 事件");
+               }
+            }
+            if(count == 0)
+            {
+                 console.info(who.name+"没有订阅过任何事件");
+            }
+        }
+        getAllList = function(){
+            return taskList;
+        }
+
+
+
+        function checkExist(who,forWhat,Unsubscribe){
+           for(var i=0,j=taskList.length;i<j;i++){
+               if(taskList[i].subscriber == who && taskList[i].event == forWhat)
+               {
+                 if(Unsubscribe){
+                     taskList.splice(i,1);
+                 }
+                 return true;
+               }
+           }
+           return false;
+        }
+
+        return {
+            subscribe:subscribe,
+            unsubscribe:unsubscribe,
+            getMySubList:getMySubList,
+            getAllList:getAllList,
+            trigger:trigger
+        }
+    }
+
+
+
+    var cookerA = new cooker("Tom");
+    var cookerB = new cooker("James")
+    var obs = new observer();
+
+    obs.subscribe(cookerA,"cookMeal");
+    obs.subscribe(cookerB,"cookMeal")
+    obs.trigger('cookMeal');
+    obs.unsubscribe(cookerB,"cookMeal")
+    obs.trigger('cookMeal');
+    obs.subscribe(cookerA,'cookMealAnother');
+    obs.trigger('cookMealAnother');
+    obs.getMySubList(cookerA);
+    obs.getMySubList(cookerB);
+
+
+		//Quoted from the book
+		Events = function() {
+
+           var listen, log, obj, one, remove, trigger, __this;
+
+           obj = {};
+
+           __this = this;
+
+           listen = function( key, eventfn ) {  //把简历扔盒子, key就是联系方式.
+
+             var stack, _ref;  //stack是盒子
+
+             stack = ( _ref = obj[key] ) != null ? _ref : obj[ key ] = [];
+
+             return stack.push( eventfn );
+
+           };
+
+           one = function( key, eventfn ) {
+
+             remove( key );
+
+             return listen( key, eventfn );
+
+           };
+
+           remove = function( key ) {
+
+             var _ref;
+
+             return ( _ref = obj[key] ) != null ? _ref.length = 0 : void 0;
+
+           };
+
+           trigger = function() {  //面试官打电话通知面试者
+
+             var fn, stack, _i, _len, _ref, key;
+
+             key = Array.prototype.shift.call( arguments );
+
+             stack = ( _ref = obj[ key ] ) != null ? _ref : obj[ key ] = [];
+
+             for ( _i = 0, _len = stack.length; _i < _len; _i++ ) {
+
+               fn = stack[ _i ];
+
+               if ( fn.apply( __this,  arguments ) === false) {
+
+                 return false;
+
+               }
+
+             }
+           }
+
+             return {
+
+                  listen: listen,
+
+                  one: one,
+
+                  remove: remove,
+
+                  trigger: trigger
+
+               }
+       }
+        var adultTv = Events();
+
+		adultTv.listen('play',  function( data ){
+
+		   console.log( "今天是谁的电影?" + data.name );
+
+		});
+
+		//发布者
+		
+		adultTv.trigger('play',{'name':'麻生希'});
+	</script>
+</body>
+</html>
